@@ -359,8 +359,9 @@ body.modo-persona .controles>:not(#btn-modo):not(#btn-ley){display:none}
   .vistas .todo{padding:9px 0}
   .col{min-width:0;flex:1;grid-template-columns:minmax(0,1fr) minmax(0,1fr)} .cols{gap:6px} .vistas button{min-width:0;overflow:hidden;text-overflow:ellipsis}
   .vistas .col .p{padding:7px 2px} .vistas .col .g{padding:9px 0 8px}
-  #franja{width:92px} #franja div{padding:0 5px 0 8px} #franja b{font-size:10.5px} #franja span{font-size:9.5px}
-  .controles{left:100px;bottom:8px} #leyenda{left:8px;right:8px;max-width:none;bottom:52px}
+  #franja{width:38px} #franja div{padding:0 2px;align-items:center} #franja b{font-size:13px;color:var(--tinta2);overflow-wrap:normal} #franja span{display:none}
+  .controles{left:46px;right:6px;bottom:8px;flex-wrap:nowrap} .controles button{height:34px;padding:0 9px;font-size:13px}
+  #recoger,#desplegar,.controles .sep{display:none} #leyenda{left:8px;right:8px;max-width:none;bottom:52px}
   .largo,#encajar span{display:none}
   .corto{display:inline}
   #pie{display:none}
@@ -487,6 +488,7 @@ const DATA = JSON.parse(document.getElementById('datos').textContent);
 const AJUSTES = {
   movilGeneracionesVertical: 3,     // móvil en vertical: la persona, sus padres y sus abuelos
   movilGeneracionesHorizontal: 4,   // móvil girado: hasta los bisabuelos
+  movilEmpiezaPorPersona: false,   // false: en el móvil se entra en el árbol completo
 };
 // ==================================================================================================================
 // Mismas medidas que generar_arbol.py: caja, separación y altura de fila
@@ -783,7 +785,7 @@ function pintar() {
   for (const c of L.cajas) h.push(svgCaja(c));
   for (const b of L.botones) h.push(svgBoton(b));
   mundo.innerHTML = h.join('');
-  franja.innerHTML = filas.map(f => { const [a, b] = rotuloFila(f.g); return `<div class="b${((f.g % 2) + 2) % 2}"><b>${esc(a)}</b>${b ? `<span>${esc(b)}</span>` : ''}</div>`; }).join('');
+  franja.innerHTML = filas.map(f => { const [a, b] = esMovil.matches ? [f.g >= 1 ? f.g + 'º' : f.g === 0 ? 'Tú' : 'Hijos', ''] : rotuloFila(f.g); return `<div class="b${((f.g % 2) + 2) % 2}"><b>${esc(a)}</b>${b ? `<span>${esc(b)}</span>` : ''}</div>`; }).join('');
   $('#desplegar').disabled = estado.plegados.size === 0;
   $('#recoger').disabled = !!(estado.raiz && !P.get(estado.raiz).sosa);
 }
@@ -1545,7 +1547,8 @@ const esMovil = window.matchMedia('(max-width: 720px), (max-height: 500px)');
 const apaisado = window.matchMedia('(orientation: landscape)');
 const movil = $('#movil'), btnModo = $('#btn-modo');
 let movilIds = new Set();
-estado.porPersona = true;
+estado.porPersona = AJUSTES.movilEmpiezaPorPersona;
+btnModo.textContent = estado.porPersona ? 'Árbol completo' : 'Ver por persona';
 function enMovil() { return esMovil.matches && estado.porPersona; }
 function padresDe(p) {
   if (!p) return null;
