@@ -310,7 +310,8 @@ ul.fuentes{margin:0 0 8px 1.1em;padding:0;font-size:14.5px} ul.fuentes li{margin
 .solo-movil{display:none !important}
 #movil{display:none}
 body.modo-persona #movil{position:absolute;inset:0;display:flex;flex-direction:column;overflow:auto;background:var(--fondo);padding-bottom:58px}
-.ayuda-persona,body.modo-persona .ayuda-arbol{display:none}
+.ayuda-persona,.ayuda-movil-arbol,body.modo-persona .ayuda-arbol,body.movil-arbol .ayuda-arbol{display:none}
+body.movil-arbol .ayuda-movil-arbol{display:block}
 body.modo-persona .ayuda-persona{display:block}
 .mi{position:absolute;top:-10px;right:4px;width:19px;height:19px;border-radius:50%;border:1px solid currentColor;font-size:12px;line-height:17px;font-style:italic;font-family:Georgia,serif;color:var(--tinta);background:var(--panel)}
 .mi::after{content:"";position:absolute;inset:-10px}
@@ -467,6 +468,7 @@ body.modo-persona .controles>:not(#btn-modo):not(#btn-ley){display:none}
       <li><i class="mt">12</i>Número Sosa, contado desde el titular</li>
     </ul>
     <p class="ayuda-arbol">Un clic abre la ficha. Doble clic en un antepasado dibuja solo su ascendencia.</p>
+    <p class="ayuda-movil-arbol">Un toque en un antepasado lo muestra con sus antepasados («ver por persona»). En los demás, abre la ficha.</p>
     <p class="ayuda-persona">Un toque en un antepasado lo pone como persona principal. La «i» de cada caja abre su ficha.</p>
   </div>
   <div id="pie"></div>
@@ -770,7 +772,7 @@ function rotulosRama(L) {
   return h.join('');
 }
 function pintar() {
-  document.body.classList.toggle('modo-persona', enMovil());
+  document.body.classList.toggle('modo-persona', enMovil()); document.body.classList.toggle('movil-arbol', esMovil.matches && !estado.porPersona);
   if (enMovil()) return pintarMovil();
   const L = ultimo = componer(), h = [];
   filas = calcFilas(L);
@@ -966,6 +968,12 @@ function historial() {
   const h = estado.raiz ? '#' + estado.raiz : '';
   if (location.hash === h || (!h && location.hash === '#solicitudes')) return;
   try { history.pushState({ d: nivel() + 1 }, '', h || location.pathname + location.search); } catch (_) {}
+}
+function aPersona(id) {
+  estado.porPersona = true; btnModo.textContent = 'Árbol completo'; ficha.hidden = true;
+  const p = P.get(id);
+  if ((p && p.sosa === 1) || estado.raiz === id) { if (p && p.sosa === 1 && estado.raiz) return salirDeArbol(); contexto(); return pintar(); }
+  verArbolDe(id, false);
 }
 function verArbolDe(id, conFicha) {
   if (!elegible(id)) return;
@@ -1199,6 +1207,8 @@ function pulsar(el) {
   if (b) { const x = ultimo.botones.find(t => t.clave === b.dataset.plegar); return alternar(b.dataset.plegar, x && x.de); }
   const c = el.closest('[data-id]'); if (!c) return;
   const id = c.dataset.id;
+  // en el móvil, con el árbol completo, un toque en un antepasado lleva a «ver por persona» desde él
+  if (esMovil.matches && !estado.porPersona && (elegible(id) || (P.get(id) || {}).sosa === 1)) { if (espera) { clearTimeout(espera.t); espera = null; } return aPersona(id); }
   // un clic abre la ficha; dos clics seguidos dibujan el árbol de esa persona (la ficha espera un instante)
   if (!elegible(id) || estado.raiz === id) { if (espera) { clearTimeout(espera.t); espera = null; } return irA(id); }
   if (espera && espera.id === id) { clearTimeout(espera.t); espera = null; return verArbolDe(id, false); }
