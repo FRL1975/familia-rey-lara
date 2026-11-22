@@ -1401,6 +1401,8 @@ const CONSULTAS = [
   ['sinnac', 'Antepasados sin fecha de nacimiento', ''],
   ['pend', 'Con algo pendiente en las notas', 'Notas que empiezan por PENDIENTE'],
   ['sol', 'Con solicitudes pendientes o en curso', '']];
+// versión reducida (DATA.lite): sin notas ni solicitudes, así que fuera las consultas de trabajo
+if (DATA.lite) for (const k of ['pend', 'sol']) { const i = CONSULTAS.findIndex(c => c[0] === k); if (i >= 0) CONSULTAS.splice(i, 1); }
 function consulta(k) {
   const r = [], vis = p => !(oculta(p) || (DATA.sinVivos && p.vivo));
   for (const p of DATA.personas) {
@@ -1631,6 +1633,7 @@ if (esMovil.addEventListener) { esMovil.addEventListener('change', alCambiarPant
   if (ap) { document.title = 'Árbol genealógico ' + ap; const h = document.querySelector('.barra h1'); if (h) h.innerHTML = '<span>Árbol genealógico</span>' + esc(ap); } })();
 indexar(); lugares();
 $('#pie').textContent = `Datos: versión ${DATA.version}, generado el ${DATA.generado}.` + (DATA.sinVivos ? ' Copia sin datos de personas vivas.' : '');
+if (DATA.lite) { const b = $('#btn-sol'); if (b) b.hidden = true; }
 const ancha = window.matchMedia('(min-width: 721px) and (min-height: 501px)'), alAncho = () => { selector.open = ancha.matches; };
 alAncho(); if (ancha.addEventListener) ancha.addEventListener('change', alAncho);
 selector.addEventListener('toggle', () => { if (ancha.matches && !selector.open) selector.open = true; });
